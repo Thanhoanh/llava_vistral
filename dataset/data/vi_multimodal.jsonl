@@ -1,3 +1,3 @@
-{"image": "images/xray_lungs.jpg", "instruction": "Mô tả nội dung ảnh X-quang này.", "response": "Ảnh chụp X-quang cho thấy tổn thương mô phổi ở vùng dưới, có thể là dấu hiệu viêm phổi."}
-{"image": "images/rash_face.jpg", "instruction": "Ảnh này biểu hiện triệu chứng gì?", "response": "Ban đỏ dạng cánh bướm quanh má, triệu chứng điển hình của lupus ban đỏ hệ thống."}
-{"image": "images/ct_brain.jpg", "instruction": "Phân tích ảnh CT sọ não.", "response": "Có vùng tối bất thường ở thùy trán, nghi ngờ tổn thương mô do chấn thương hoặc đột quỵ nhỏ."}
+{"image": "dataset/images/xray_lungs.jpg", "instruction": "Mô tả nội dung ảnh X-quang này.", "response": "Ảnh chụp X-quang cho thấy tổn thương mô phổi ở vùng dưới, có thể là dấu hiệu viêm phổi."}
+{"image": "dataset/images/rash_face.jpg", "instruction": "Ảnh này biểu hiện triệu chứng gì?", "response": "Ban đỏ dạng cánh bướm quanh má, triệu chứng điển hình của lupus ban đỏ hệ thống."}
+{"image": "dataset/images/ct_brain.jpg", "instruction": "Phân tích ảnh CT sọ não.", "response": "Có vùng tối bất thường ở thùy trán, nghi ngờ tổn thương mô do chấn thương hoặc đột quỵ nhỏ."}
