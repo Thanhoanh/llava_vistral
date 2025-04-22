@@ -62,7 +62,7 @@ if __name__ == "__main__":
     tokenizer = model_wrapper.tokenizer
 
     vision_encoder = CLIPVisionEncoder("openai/clip-vit-base-patch32")
-    projector = ProjectorMLP(input_dim=1024, output_dim=model.config.hidden_size)
+    projector = ProjectorMLP(input_dim=512, output_dim=model.config.hidden_size)
 
     dataset = MultimodalDataset("dataset/data/vi_multimodal.jsonl", tokenizer, vision_encoder, projector)
     dataloader = DataLoader(dataset, batch_size=cfg["per_device_train_batch_size"], shuffle=True)
