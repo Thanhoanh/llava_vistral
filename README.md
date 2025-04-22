@@ -7,8 +7,8 @@
 
 ## Usage on RunPod:
 ```bash
-git clone https://github.com/yourname/vistral-mm-runpod.git
-cd vistral-mm-runpod
+git clone[ https://github.com/Thanhoanh/llava_vistral.git
+cd llava_vistral
 pip install -r requirements.txt
 python app.py
 ```
