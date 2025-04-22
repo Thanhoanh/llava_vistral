@@ -37,8 +37,10 @@ class MultimodalDataset(torch.utils.data.Dataset):
 
         # Encode image
         image_feat = self.vision_encoder(image)
+        if image_feat.dim() == 1:
+            image_feat = image_feat.unsqueeze(0)
+        
         image_embed = self.projector(image_feat)
-
         return {
             "input_ids": input_ids,
             "labels": labels,
