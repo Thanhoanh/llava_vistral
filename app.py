@@ -1,43 +1,32 @@
-
 import gradio as gr
 from PIL import Image
-from models.image_generator import ImageGenerator
-from models.vision_encoder import CLIPVisionEncoder
-from models.projector import ProjectorMLP
-from models.llm_vistral import load_llm
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-vision_encoder = CLIPVisionEncoder("openai/clip-vit-base-patch32")
-projector = ProjectorMLP(input_dim=1024, output_dim=4096)
-llm = load_llm("checkpoints/vistral-mm")
-image_generator = ImageGenerator("configs/diffusion_config.yaml")
+# Load mô hình và tokenizer từ thư mục đã huấn luyện
+model = AutoModelForCausalLM.from_pretrained(
+    "vistral-mm",  # thư mục chứa model
+    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+)
+tokenizer = AutoTokenizer.from_pretrained("vistral-mm")
 
-def analyze_image(image):
-    features = vision_encoder(image)
-    projected = projector(features.unsqueeze(0))
-    prompt = "Ảnh này có đặc điểm gì?"
-    input_embeds = projected
-    response = llm.generate_from_image_features(input_embeds, prompt)
-    return response
+# Hàm xử lý câu hỏi
+def chat_with_model(prompt):
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=150)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-def generate_from_prompt(prompt):
-    image = image_generator.generate(prompt)
-    return image
-
+# Giao diện Gradio
 with gr.Blocks() as demo:
-    gr.Markdown("# 📈 Vistral-Multimodal: Vietnamese AI Assistant")
+    gr.Markdown("# 🤖 Trợ lý tiếng Việt Vistral-MM (Text → Text)")
 
-    with gr.Tab("Image → Text"):
-        image_input = gr.Image(type="pil")
-        caption_output = gr.Textbox()
-        btn1 = gr.Button("Phân tích ảnh")
-        btn1.click(analyze_image, inputs=image_input, outputs=caption_output)
+    prompt_input = gr.Textbox(label="📝 Nhập câu hỏi hoặc mô tả", placeholder="Ví dụ: Triệu chứng của sốt xuất huyết?")
+    output_text = gr.Textbox(label="📋 Câu trả lời từ mô hình")
 
-    with gr.Tab("Text → Image"):
-        prompt_input = gr.Textbox(label="Nhập mô tả y tế")
-        image_output = gr.Image()
-        btn2 = gr.Button("Sinh ảnh")
-        btn2.click(generate_from_prompt, inputs=prompt_input, outputs=image_output)
+    btn = gr.Button("💬 Gửi")
+    btn.click(chat_with_model, inputs=prompt_input, outputs=output_text)
 
+# Khởi chạy server
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)
