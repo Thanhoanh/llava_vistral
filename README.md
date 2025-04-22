@@ -1,4 +1,4 @@
-# Vistral Multimodal (RunPod-ready)
+# Vistral Multimodal
 
 ## Features:
 - Image understanding (Image → Text)
@@ -12,7 +12,3 @@ cd vistral-mm-runpod
 pip install -r requirements.txt
 python app.py
 ```
-
-## Output:
-- Visit RunPod link on port 7860
-- Interact with medical image or prompt
