@@ -1,0 +1,10 @@
+transformers
+peft
+datasets
+diffusers
+pillow
+gradio
+accelerate
+bitsandbytes
+torch
+xformers
