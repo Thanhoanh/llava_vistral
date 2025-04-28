@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
             optimizer.zero_grad()
 
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast(device_type="cuda"):
                 outputs = model(input_ids=input_ids, labels=labels)
                 loss = outputs.loss
 
