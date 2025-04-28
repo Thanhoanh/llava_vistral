@@ -11,12 +11,20 @@ from torch import nn
 from tqdm import tqdm
 import json
 
+from torchvision import transforms
+from PIL import Image
+
 class MultimodalDataset(torch.utils.data.Dataset):
     def __init__(self, data_path, tokenizer, vision_encoder, projector):
         self.data = [json.loads(line) for line in open(data_path)]
         self.tokenizer = tokenizer
         self.vision_encoder = vision_encoder
         self.projector = projector
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),  # Chuyển luôn thành tensor để tăng tốc
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        ])
 
     def __len__(self):
         return len(self.data)
@@ -27,28 +35,21 @@ class MultimodalDataset(torch.utils.data.Dataset):
         instruction = sample["instruction"]
         response = sample["response"]
 
-        # Load image
-        from PIL import Image
+        # Load và transform image
         image = Image.open(image_path).convert("RGB")
+        image = self.transform(image)  # Bây giờ image là Tensor rồi
 
-        # Encode text
-        input_ids = self.tokenizer(instruction, return_tensors="pt", truncation=True, padding="max_length", max_length=512).input_ids[0]
-        labels = self.tokenizer(response, return_tensors="pt", truncation=True, padding="max_length", max_length=512).input_ids[0]
+        input_ids = self.tokenizer(instruction, return_tensors="pt", truncation=True, padding="max_length", max_length=512).input_ids.squeeze(0)
+        labels = self.tokenizer(response, return_tensors="pt", truncation=True, padding="max_length", max_length=512).input_ids.squeeze(0)
 
-        # Encode image
-        image_feat = self.vision_encoder(image)
-        if image_feat.dim() == 1:
-            image_feat = image_feat.unsqueeze(0)
-        
-        image_embed = self.projector(image_feat)
         return {
             "input_ids": input_ids,
             "labels": labels,
-            "image_embed": image_embed
+            "image_tensor": image
         }
 
 if __name__ == "__main__":
-    print("🚀 Đang khởi tạo...")
+    print("🚀 Khởi tạo...")
 
     with open("configs/vistral_config.json") as f:
         cfg = json.load(f)
@@ -65,21 +66,35 @@ if __name__ == "__main__":
     projector = ProjectorMLP(input_dim=512, output_dim=model.config.hidden_size)
 
     dataset = MultimodalDataset("dataset/prompt/vi_multimodal.jsonl", tokenizer, vision_encoder, projector)
-    dataloader = DataLoader(dataset, batch_size=cfg["per_device_train_batch_size"], shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=cfg["per_device_train_batch_size"], shuffle=True, num_workers=4, pin_memory=True)
 
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg["learning_rate"])
+    scaler = torch.cuda.amp.GradScaler()  # mixed precision
 
     print("✅ Bắt đầu huấn luyện...")
     for epoch in range(cfg["num_train_epochs"]):
-        for batch in tqdm(dataloader):
+        pbar = tqdm(dataloader)
+        for batch in pbar:
             input_ids = batch["input_ids"].to(model.device)
             labels = batch["labels"].to(model.device)
-            outputs = model(input_ids=input_ids, labels=labels)
-            loss = outputs.loss
-            loss.backward()
-            optimizer.step()
+            images = batch["image_tensor"].to(model.device)
+
+            # Encode ảnh
+            image_feat = vision_encoder(images)
+            image_embed = projector(image_feat)
+
             optimizer.zero_grad()
+
+            with torch.cuda.amp.autocast():
+                outputs = model(input_ids=input_ids, labels=labels)
+                loss = outputs.loss
+
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+            pbar.set_postfix({"loss": loss.item()})
 
     print("📦 Đang lưu mô hình vào:", cfg["output_dir"])
     model.save_pretrained(cfg["output_dir"])
