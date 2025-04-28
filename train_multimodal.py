@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg["learning_rate"])
-    scaler = torch.cuda.amp.GradScaler()  # mixed precision
+    scaler = torch.cuda.amp.GradScaler('cuda')  # mixed precision
 
     print("✅ Bắt đầu huấn luyện...")
     for epoch in range(cfg["num_train_epochs"]):
