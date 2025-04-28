@@ -7,7 +7,7 @@ import torch
 class CLIPVisionEncoder:
     def __init__(self, model_name='openai/clip-vit-base-patch32'):
         self.model = CLIPModel.from_pretrained(model_name)
-        self.processor = CLIPProcessor.from_pretrained(model_name)
+        self.processor = CLIPProcessor.from_pretrained(model_name, do_rescale=False)
 
     def __call__(self, image):
         inputs = self.processor(images=image, return_tensors="pt")
