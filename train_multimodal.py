@@ -22,9 +22,8 @@ class MultimodalDataset(torch.utils.data.Dataset):
         self.projector = projector
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),
-            transforms.ToTensor(),  # Chuyển luôn thành tensor để tăng tốc
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-        ])
+            transforms.ToTensor()
+])
 
     def __len__(self):
         return len(self.data)
