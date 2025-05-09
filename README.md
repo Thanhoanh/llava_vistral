@@ -12,3 +12,9 @@ cd llava_vistral
 pip install -r requirements.txt
 python app.py
 ```
+## Training Process: 
+Login Hugging Face using your Token with Vistral Permission:
+```bash
+huggingface-cli login
+```
+
